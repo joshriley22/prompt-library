@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Small Business AI Prompt Library</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        const promptDatabase = {
+            emails: {
+                title: "Email Management",
+                icon: "fa-envelope",
+                color: "bg-blue-500",
+                prompts: [
+                    {
+                        title: "Professional Client Follow-up",
+                        description: "Follow up with clients after meetings or proposals",
+                        prompt: "Write a professional follow-up email to a client after our meeting about [topic]. Include: a thank you for their time, key points discussed, next steps, and a clear call-to-action. Keep the tone friendly but professional."
+                    },
+                    {
+                        title: "Customer Service Response",
+                        description: "Respond to customer complaints or inquiries",
+                        prompt: "Draft a customer service email response to address [customer complaint/issue]. Show empathy, acknowledge the problem, explain the solution or next steps, and offer compensation if appropriate. Maintain a helpful and apologetic tone."
+                    },
+                    {
+                        title: "Sales Outreach Email",
+                        description: "Reach out to potential customers",
+                        prompt: "Create a cold outreach email to introduce our [product/service] to [target audience]. Highlight 3 key benefits, include a compelling subject line, keep it under 150 words, and end with a low-pressure call-to-action."
+                    },
+                    {
+                        title: "Meeting Request",
+                        description: "Schedule meetings with clients or partners",
+                        prompt: "Write an email requesting a meeting with [person/company] to discuss [topic]. Explain the purpose clearly, suggest 2-3 time slots, and keep it concise and respectful of their time."
+                    },
+                    {
+                        title: "Newsletter Template",
+                        description: "Create engaging customer newsletters",
+                        prompt: "Create a monthly newsletter for our [business type] customers. Include: a friendly greeting, 3 main updates/news items, a featured product/service, and a call-to-action. Make it conversational and engaging."
+                    }
+                ]
+            },
+            finances: {
+                title: "Financial Management",
+                icon: "fa-chart-line",
+                color: "bg-green-500",
+                prompts: [
+                    {
+                        title: "Budget Planning",
+                        description: "Create budgets for projects or periods",
+                        prompt: "Help me create a detailed budget for [project/time period]. My revenue/income is [amount], and I need to allocate funds across: [list categories like payroll, marketing, supplies, etc.]. Provide a breakdown with percentages and recommendations."
+                    },
+                    {
+                        title: "Expense Analysis",
+                        description: "Analyze and categorize business expenses",
+                        prompt: "Analyze these business expenses and categorize them: [paste expense list]. Identify areas where I might be overspending and suggest cost-cutting opportunities without compromising quality."
+                    },
+                    {
+                        title: "Invoice Creation",
+                        description: "Generate professional invoices",
+                        prompt: "Create a professional invoice for [client name] for [services/products provided]. Include: invoice number [#], date [date], itemized list of services/products, quantities, rates, subtotal, tax, and total. Add payment terms of [X days]."
+                    },
+                    {
+                        title: "Financial Report Summary",
+                        description: "Summarize financial data for stakeholders",
+                        prompt: "Create an executive summary of our financial performance for [time period]. Here's our data: [revenue, expenses, profit/loss, key metrics]. Make it clear for non-financial stakeholders with key insights and trends."
+                    },
+                    {
+                        title: "Cash Flow Projection",
+                        description: "Project future cash flow",
+                        prompt: "Help me create a 6-month cash flow projection. My average monthly revenue is [amount], fixed costs are [amount], variable costs are [amount], and upcoming major expenses are [list]. Highlight potential cash flow issues."
+                    }
+                ]
+            },
+            reports: {
+                title: "Report Writing",
+                icon: "fa-file-alt",
+                color: "bg-purple-500",
+                prompts: [
+                    {
+                        title: "Monthly Performance Report",
+                        description: "Summarize monthly business performance",
+                        prompt: "Create a monthly performance report for [month]. Include sections on: sales/revenue, customer metrics, operational highlights, challenges faced, and goals for next month. Here's the data: [paste your data]."
+                    },
+                    {
+                        title: "Project Status Update",
+                        description: "Update stakeholders on project progress",
+                        prompt: "Write a project status report for [project name]. Cover: current progress (%), completed milestones, upcoming tasks, budget status, risks/issues, and next steps. Keep it concise and actionable."
+                    },
+                    {
+                        title: "Market Research Summary",
+                        description: "Summarize market research findings",
+                        prompt: "Summarize these market research findings for [industry/product]: [paste research data]. Include key insights, trends, competitor analysis, and actionable recommendations for our business."
+                    },
+                    {
+                        title: "Annual Business Review",
+                        description: "Create comprehensive year-end reviews",
+                        prompt: "Create an annual business review for [year]. Analyze: revenue growth, customer acquisition, major achievements, lessons learned, market changes, and strategic goals for next year. Make it inspiring and data-driven."
+                    },
+                    {
+                        title: "Incident Report",
+                        description: "Document workplace incidents or issues",
+                        prompt: "Write a professional incident report about [incident]. Include: date/time, people involved, what happened (objective facts), immediate actions taken, root cause analysis, and recommendations to prevent recurrence."
+                    }
+                ]
+            },
+            scheduling: {
+                title: "Scheduling & Planning",
+                icon: "fa-calendar",
+                color: "bg-orange-500",
+                prompts: [
+                    {
+                        title: "Weekly Team Schedule",
+                        description: "Organize team schedules and shifts",
+                        prompt: "Create a weekly schedule for our team of [number] people covering [hours/days]. Roles needed: [list roles]. Constraints: [any limitations like availability, max hours]. Ensure fair distribution and adequate coverage."
+                    },
+                    {
+                        title: "Project Timeline",
+                        description: "Plan project timelines and milestones",
+                        prompt: "Create a project timeline for [project name] that needs to be completed by [deadline]. Break down into phases, assign realistic timeframes, identify dependencies, and highlight critical milestones. Total duration: [X weeks/months]."
+                    },
+                    {
+                        title: "Meeting Agenda",
+                        description: "Structure productive meeting agendas",
+                        prompt: "Create a meeting agenda for [meeting purpose] scheduled for [duration]. Topics to cover: [list topics]. Include time allocations for each item, expected outcomes, and any pre-work needed from attendees."
+                    },
+                    {
+                        title: "Content Calendar",
+                        description: "Plan social media and content publishing",
+                        prompt: "Create a monthly content calendar for our [platform(s)]. We want to post [frequency] about [topics/themes]. Include post ideas, optimal posting times, content types (video, image, text), and key dates/holidays to leverage."
+                    },
+                    {
+                        title: "Task Prioritization",
+                        description: "Prioritize tasks and manage time",
+                        prompt: "Help me prioritize these tasks: [list tasks]. Consider urgency, importance, deadlines, and impact on business goals. Use the Eisenhower Matrix or similar framework and suggest a daily schedule."
+                    }
+                ]
+            },
+            marketing: {
+                title: "Marketing & Sales",
+                icon: "fa-bullhorn",
+                color: "bg-pink-500",
+                prompts: [
+                    {
+                        title: "Social Media Post",
+                        description: "Create engaging social media content",
+                        prompt: "Write a [platform] post about [topic/product/announcement]. Target audience: [describe audience]. Goal: [engagement/sales/awareness]. Include a hook, value proposition, and call-to-action. Add relevant hashtag suggestions."
+                    },
+                    {
+                        title: "Product Description",
+                        description: "Write compelling product descriptions",
+                        prompt: "Write a product description for [product name]. Key features: [list features]. Target customer: [describe]. Benefits: [list benefits]. Make it persuasive, highlight what makes it unique, and optimize for both customers and SEO."
+                    },
+                    {
+                        title: "Marketing Campaign Ideas",
+                        description: "Brainstorm marketing campaign concepts",
+                        prompt: "Generate 5 marketing campaign ideas for [product/service/event]. Target audience: [describe]. Budget: [amount/range]. Goals: [awareness/sales/engagement]. Include campaign themes, channels, and expected outcomes."
+                    },
+                    {
+                        title: "Customer Testimonial Request",
+                        description: "Request reviews and testimonials",
+                        prompt: "Write an email to request a testimonial from [happy customer] about their experience with [product/service]. Make it easy for them by asking specific questions they can answer. Keep it brief and appreciative."
+                    },
+                    {
+                        title: "Competitor Analysis",
+                        description: "Analyze competitor strategies",
+                        prompt: "Analyze our competitors: [list 2-3 competitors]. Compare: pricing, unique selling points, marketing approach, strengths, and weaknesses. Identify gaps in the market we can exploit and strategies we should adopt or avoid."
+                    }
+                ]
+            },
+            hr: {
+                title: "HR & Team Management",
+                icon: "fa-users",
+                color: "bg-indigo-500",
+                prompts: [
+                    {
+                        title: "Job Posting",
+                        description: "Create attractive job postings",
+                        prompt: "Write a job posting for [position title]. Company: [your business]. Responsibilities: [list]. Required qualifications: [list]. Nice-to-have: [list]. Make it appealing to top talent, include salary range if [range], and highlight company culture/benefits."
+                    },
+                    {
+                        title: "Employee Performance Review",
+                        description: "Structure performance evaluations",
+                        prompt: "Help me structure a performance review for [employee name/position]. Review period: [dates]. Focus areas: [achievements, areas for improvement, goals]. Provide a balanced framework that's constructive and motivating."
+                    },
+                    {
+                        title: "Team Meeting Announcement",
+                        description: "Communicate team meetings effectively",
+                        prompt: "Write an announcement for a team meeting about [topic]. Date/time: [when]. Purpose: [why]. What to prepare: [any prep work]. Make it clear, concise, and ensure everyone understands the importance."
+                    },
+                    {
+                        title: "Employee Handbook Section",
+                        description: "Draft HR policies and procedures",
+                        prompt: "Write a section for our employee handbook covering [policy topic, e.g., remote work, PTO, dress code]. Make it clear, fair, legally compliant, and aligned with our company values of [list values]."
+                    },
+                    {
+                        title: "Team Recognition Message",
+                        description: "Recognize and motivate team members",
+                        prompt: "Write a message recognizing [employee/team] for [achievement/contribution]. Make it specific, genuine, and motivating. Consider sharing it [in team meeting/company-wide/one-on-one]."
+                    }
+                ]
+            }
+        };
+
+        function App() {
+            const [selectedCategory, setSelectedCategory] = useState(null);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [copiedPrompt, setCopiedPrompt] = useState(null);
+
+            const copyToClipboard = (text, index) => {
+                navigator.clipboard.writeText(text);
+                setCopiedPrompt(index);
+                setTimeout(() => setCopiedPrompt(null), 2000);
+            };
+
+            const filteredResults = useMemo(() => {
+                if (!searchQuery) return [];
+                
+                const results = [];
+                const query = searchQuery.toLowerCase();
+                
+                Object.entries(promptDatabase).forEach(([categoryKey, category]) => {
+                    category.prompts.forEach(prompt => {
+                        const matchScore = 
+                            (prompt.title.toLowerCase().includes(query) ? 3 : 0) +
+                            (prompt.description.toLowerCase().includes(query) ? 2 : 0) +
+                            (prompt.prompt.toLowerCase().includes(query) ? 1 : 0) +
+                            (category.title.toLowerCase().includes(query) ? 2 : 0);
+                        
+                        if (matchScore > 0) {
+                            results.push({
+                                ...prompt,
+                                category: category.title,
+                                categoryColor: category.color,
+                                categoryKey,
+                                matchScore
+                            });
+                        }
+                    });
+                });
+                
+                return results.sort((a, b) => b.matchScore - a.matchScore);
+            }, [searchQuery]);
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+                    {/* Header */}
+                    <div className="bg-white shadow-sm border-b">
+                        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+                            <div className="flex items-center gap-3 mb-4">
+                                <i className="fas fa-lightbulb text-4xl text-yellow-500"></i>
+                                <div>
+                                    <h1 className="text-3xl font-bold text-slate-900">Small Business AI Prompt Library</h1>
+                                    <p className="text-slate-600 mt-1">Ready-to-use AI prompts for common business tasks</p>
+                                </div>
+                            </div>
+                            
+                            {/* Search Bar */}
+                            <div className="relative">
+                                <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                                <input
+                                    type="text"
+                                    placeholder="Search for prompts (e.g., 'customer email', 'budget', 'job posting')..."
+                                    className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
+                                    value={searchQuery}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setSelectedCategory(null);
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+                        {/* Search Results */}
+                        {searchQuery && (
+                            <div className="mb-8">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-2xl font-bold text-slate-900">
+                                        Search Results ({filteredResults.length})
+                                    </h2>
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="text-blue-600 hover:text-blue-700 font-medium"
+                                    >
+                                        Clear Search
+                                    </button>
+                                </div>
+                                
+                                {filteredResults.length === 0 ? (
+                                    <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                                        <i className="fas fa-search text-4xl text-slate-300 mb-3"></i>
+                                        <p className="text-slate-600 text-lg">No prompts found matching "{searchQuery}"</p>
+                                        <p className="text-slate-500 mt-2">Try a different search term or browse categories below</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {filteredResults.map((prompt, index) => (
+                                            <div key={index} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-6">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className={`${prompt.categoryColor} text-white text-xs px-2 py-1 rounded`}>
+                                                                {prompt.category}
+                                                            </span>
+                                                        </div>
+                                                        <h3 className="text-xl font-semibold text-slate-900">{prompt.title}</h3>
+                                                        <p className="text-slate-600 mt-1">{prompt.description}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="bg-slate-50 rounded-lg p-4 mb-3 border border-slate-200">
+                                                    <p className="text-slate-700 font-mono text-sm whitespace-pre-wrap">{prompt.prompt}</p>
+                                                </div>
+                                                
+                                                <button
+                                                    onClick={() => copyToClipboard(prompt.prompt, `search-${index}`)}
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                                                >
+                                                    <i className={`fas ${copiedPrompt === `search-${index}` ? 'fa-check' : 'fa-copy'}`}></i>
+                                                    {copiedPrompt === `search-${index}` ? 'Copied!' : 'Copy Prompt'}
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Categories Grid */}
+                        {!searchQuery && !selectedCategory && (
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-6">Browse by Category</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {Object.entries(promptDatabase).map(([key, category]) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setSelectedCategory(key)}
+                                            className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all p-6 text-left group"
+                                        >
+                                            <div className={`${category.color} w-14 h-14 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                                                <i className={`fas ${category.icon} text-2xl text-white`}></i>
+                                            </div>
+                                            <h3 className="text-xl font-bold text-slate-900 mb-2">{category.title}</h3>
+                                            <p className="text-slate-600">{category.prompts.length} prompts available</p>
+                                            <div className="mt-4 text-blue-600 font-medium flex items-center gap-2">
+                                                View Prompts <i className="fas fa-arrow-right"></i>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Category Detail View */}
+                        {!searchQuery && selectedCategory && (
+                            <div>
+                                <button
+                                    onClick={() => setSelectedCategory(null)}
+                                    className="text-blue-600 hover:text-blue-700 font-medium mb-6 flex items-center gap-2"
+                                >
+                                    <i className="fas fa-arrow-left"></i> Back to Categories
+                                </button>
+                                
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className={`${promptDatabase[selectedCategory].color} w-16 h-16 rounded-lg flex items-center justify-center`}>
+                                        <i className={`fas ${promptDatabase[selectedCategory].icon} text-3xl text-white`}></i>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-3xl font-bold text-slate-900">{promptDatabase[selectedCategory].title}</h2>
+                                        <p className="text-slate-600 mt-1">{promptDatabase[selectedCategory].prompts.length} prompts</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {promptDatabase[selectedCategory].prompts.map((prompt, index) => (
+                                        <div key={index} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-6">
+                                            <h3 className="text-xl font-semibold text-slate-900 mb-2">{prompt.title}</h3>
+                                            <p className="text-slate-600 mb-4">{prompt.description}</p>
+                                            
+                                            <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-200">
+                                                <p className="text-slate-700 font-mono text-sm whitespace-pre-wrap">{prompt.prompt}</p>
+                                            </div>
+                                            
+                                            <button
+                                                onClick={() => copyToClipboard(prompt.prompt, `${selectedCategory}-${index}`)}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                                            >
+                                                <i className={`fas ${copiedPrompt === `${selectedCategory}-${index}` ? 'fa-check' : 'fa-copy'}`}></i>
+                                                {copiedPrompt === `${selectedCategory}-${index}` ? 'Copied!' : 'Copy Prompt'}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="bg-white border-t mt-12 py-6">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-600">
+                            <p>💡 Tip: Customize the prompts by replacing the bracketed sections with your specific information</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
