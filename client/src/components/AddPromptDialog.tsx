@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPromptSchema } from "@shared/schema";
 import { type InsertPrompt } from "@shared/routes";
-import { useCreatePrompt, useCategories } from "@/hooks/use-prompts";
+import { useCreatePrompt, useCategories, useComponents } from "@/hooks/use-prompts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +36,7 @@ import { Plus } from "lucide-react";
 export function AddPromptDialog() {
   const [open, setOpen] = useState(false);
   const { data: categories } = useCategories();
+  const { data: componentsList } = useComponents();
   const createMutation = useCreatePrompt();
 
   const form = useForm<InsertPrompt>({
@@ -45,8 +46,15 @@ export function AddPromptDialog() {
       description: "",
       content: "",
       isFavorite: false,
+      componentId: 0,
     },
   });
+
+  useEffect(() => {
+    if (componentsList?.length && form.getValues("componentId") === 0) {
+      form.setValue("componentId", componentsList[0].id);
+    }
+  }, [componentsList, form]);
 
   const onSubmit = (data: InsertPrompt) => {
     createMutation.mutate(data, {
@@ -75,12 +83,12 @@ export function AddPromptDialog() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
-                  <FormItem className="col-span-2 sm:col-span-1">
+                  <FormItem className="sm:col-span-2">
                     <FormLabel>Title</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Sales Email" {...field} />
@@ -98,7 +106,7 @@ export function AddPromptDialog() {
                     <FormLabel>Category</FormLabel>
                     <Select 
                       onValueChange={(val) => field.onChange(parseInt(val))}
-                      defaultValue={field.value?.toString()}
+                      value={field.value?.toString()}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -109,6 +117,34 @@ export function AddPromptDialog() {
                         {categories?.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id.toString()}>
                             {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="componentId"
+                render={({ field }) => (
+                  <FormItem className="col-span-2 sm:col-span-1">
+                    <FormLabel>Component</FormLabel>
+                    <Select 
+                      onValueChange={(val) => field.onChange(parseInt(val))}
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select component" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {componentsList?.map((comp) => (
+                          <SelectItem key={comp.id} value={comp.id.toString()}>
+                            {comp.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertPromptSchema, insertCategorySchema, prompts, categories } from './schema';
+import { insertPromptSchema, insertCategorySchema, prompts, categories, components } from './schema';
 
 // ============================================
 // SHARED ERROR SCHEMAS
@@ -21,6 +21,15 @@ export const errorSchemas = {
 // API CONTRACT
 // ============================================
 export const api = {
+  components: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/components',
+      responses: {
+        200: z.array(z.custom<typeof components.$inferSelect>()),
+      },
+    },
+  },
   categories: {
     list: {
       method: 'GET' as const,
@@ -47,14 +56,14 @@ export const api = {
         categoryId: z.coerce.number().optional(),
       }).optional(),
       responses: {
-        200: z.array(z.custom<typeof prompts.$inferSelect & { category: typeof categories.$inferSelect }>()),
+        200: z.array(z.custom<typeof prompts.$inferSelect & { category?: typeof categories.$inferSelect; component?: typeof components.$inferSelect }>()),
       },
     },
     get: {
       method: 'GET' as const,
       path: '/api/prompts/:id',
       responses: {
-        200: z.custom<typeof prompts.$inferSelect>(),
+        200: z.custom<typeof prompts.$inferSelect & { category?: typeof categories.$inferSelect; component?: typeof components.$inferSelect }>(),
         404: errorSchemas.notFound,
       },
     },

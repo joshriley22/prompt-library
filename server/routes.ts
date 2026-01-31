@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import type { Server } from "http";
-import { storage } from "./storage";
+import { storage, type IStorage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 
@@ -10,6 +10,17 @@ async function seedDatabase() {
   if (existingCategories.length > 0) return;
 
   console.log("Seeding database with initial data...");
+
+  // Create components first (each prompt references one)
+  const { db } = await import("./db");
+  const { components } = await import("@shared/schema");
+  const componentNames = ["Email", "Document", "Report", "Calendar", "Marketing", "Operations", "HR", "General"];
+  const componentMap: Record<string, number> = {};
+  for (const name of componentNames) {
+    const [c] = await db.insert(components).values({ name }).returning();
+    if (c) componentMap[name] = c.id;
+  }
+  const defaultComponentId = componentMap["General"] ?? componentMap["Document"] ?? Object.values(componentMap)[0];
 
   const seedData = {
     emails: {
@@ -170,6 +181,16 @@ async function seedDatabase() {
     }
   };
 
+  const slugToComponentId: Record<string, number> = {
+    emails: componentMap["Email"],
+    finances: componentMap["Document"],
+    reports: componentMap["Report"],
+    scheduling: componentMap["Calendar"],
+    marketing: componentMap["Marketing"],
+    operations: componentMap["Operations"],
+    hr: componentMap["HR"],
+  };
+
   for (const [slug, data] of Object.entries(seedData)) {
     const category = await storage.createCategory({
       name: data.title,
@@ -179,9 +200,11 @@ async function seedDatabase() {
       color: data.color
     });
 
+    const componentId = slugToComponentId[slug] ?? defaultComponentId;
     for (const prompt of data.prompts) {
       await storage.createPrompt({
         categoryId: category.id,
+        componentId,
         title: prompt.title,
         description: prompt.description,
         content: prompt.content,
@@ -195,20 +218,30 @@ async function seedDatabase() {
 
 export async function registerRoutes(
   httpServer: Server,
-  app: Express
+  app: Express,
+  storageOverride?: IStorage
 ): Promise<Server> {
+  const store = storageOverride ?? storage;
 
-  // Seed data on startup
-  seedDatabase().catch(console.error);
+  // Seed data on startup (skip when using test storage)
+  if (!storageOverride) {
+    seedDatabase().catch(console.error);
+  }
+
+  // Components
+  app.get(api.components.list.path, async (req, res) => {
+    const list = await store.getComponents();
+    res.json(list);
+  });
 
   // Categories
   app.get(api.categories.list.path, async (req, res) => {
-    const categories = await storage.getCategories();
+    const categories = await store.getCategories();
     res.json(categories);
   });
 
   app.get(api.categories.get.path, async (req, res) => {
-    const category = await storage.getCategory(Number(req.params.id));
+    const category = await store.getCategory(Number(req.params.id));
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
     }
@@ -222,7 +255,7 @@ export async function registerRoutes(
       const search = req.query.search as string | undefined;
       const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
       
-      const prompts = await storage.getPrompts({ search, categoryId });
+      const prompts = await store.getPrompts({ search, categoryId });
       res.json(prompts);
     } catch (error) {
       console.error('Error fetching prompts:', error);
@@ -231,7 +264,7 @@ export async function registerRoutes(
   });
 
   app.get(api.prompts.get.path, async (req, res) => {
-    const prompt = await storage.getPrompt(Number(req.params.id));
+    const prompt = await store.getPrompt(Number(req.params.id));
     if (!prompt) {
       return res.status(404).json({ message: "Prompt not found" });
     }
@@ -241,7 +274,7 @@ export async function registerRoutes(
   app.post(api.prompts.create.path, async (req, res) => {
     try {
       const input = api.prompts.create.input.parse(req.body);
-      const prompt = await storage.createPrompt(input);
+      const prompt = await store.createPrompt(input);
       res.status(201).json(prompt);
     } catch (err) {
       if (err instanceof z.ZodError) {

@@ -34,10 +34,15 @@ export function PromptDetailDialog({ prompt, open, onOpenChange }: PromptDetailD
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl">
         <div className="bg-gradient-to-r from-primary/10 to-accent/5 p-6 pb-8 border-b">
           <DialogHeader>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 shadow-none">
                 {prompt.category?.name}
               </Badge>
+              {prompt.component?.name && (
+                <Badge variant="outline" className="text-muted-foreground">
+                  {prompt.component.name}
+                </Badge>
+              )}
               {prompt.isFavorite && (
                 <Badge variant="outline" className="border-yellow-200 bg-yellow-50 text-yellow-700">
                   Favorite

@@ -37,12 +37,18 @@ export function PromptCard({ prompt, onClick }: PromptCardProps) {
         <CardHeader className="pb-3 pt-5 px-6">
           <div className="flex justify-between items-start gap-4">
             <div className="space-y-1">
-              <Badge variant="secondary" className={cn(
-                "mb-2 font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 border-transparent",
-                // Dynamic coloring based on category could go here if category had color field
-              )}>
-                {prompt.category?.name || "Uncategorized"}
-              </Badge>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                <Badge variant="secondary" className={cn(
+                  "font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 border-transparent",
+                )}>
+                  {prompt.category?.name || "Uncategorized"}
+                </Badge>
+                {prompt.component?.name && (
+                  <Badge variant="outline" className="font-medium text-muted-foreground">
+                    {prompt.component.name}
+                  </Badge>
+                )}
+              </div>
               <h3 className="font-display font-bold text-lg leading-tight text-foreground group-hover:text-primary transition-colors">
                 {prompt.title}
               </h3>

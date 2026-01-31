@@ -2,16 +2,21 @@ import { db } from "./db";
 import {
   prompts,
   categories,
+  components,
   type Prompt,
   type InsertPrompt,
   type Category,
   type InsertCategory,
+  type Component,
   type PromptResponse,
   type CategoryResponse
 } from "@shared/schema";
-import { eq, like, or, ilike } from "drizzle-orm";
+import { eq, or, ilike } from "drizzle-orm";
 
 export interface IStorage {
+  // Components
+  getComponents(): Promise<Component[]>;
+
   // Categories
   getCategories(): Promise<Category[]>;
   getCategory(id: number): Promise<CategoryResponse | undefined>;
@@ -20,11 +25,16 @@ export interface IStorage {
 
   // Prompts
   getPrompts(params?: { search?: string; categoryId?: number }): Promise<PromptResponse[]>;
-  getPrompt(id: number): Promise<Prompt | undefined>;
+  getPrompt(id: number): Promise<PromptResponse | undefined>;
   createPrompt(prompt: InsertPrompt): Promise<Prompt>;
 }
 
 export class DatabaseStorage implements IStorage {
+  // Components
+  async getComponents(): Promise<Component[]> {
+    return await db.select().from(components);
+  }
+
   // Categories
   async getCategories(): Promise<Category[]> {
     return await db.select().from(categories);
@@ -53,15 +63,18 @@ export class DatabaseStorage implements IStorage {
     let query = db.select({
       id: prompts.id,
       categoryId: prompts.categoryId,
+      componentId: prompts.componentId,
       title: prompts.title,
       description: prompts.description,
       content: prompts.content,
       isFavorite: prompts.isFavorite,
       metadata: prompts.metadata,
-      category: categories
+      category: categories,
+      component: components
     })
     .from(prompts)
-    .leftJoin(categories, eq(prompts.categoryId, categories.id));
+    .leftJoin(categories, eq(prompts.categoryId, categories.id))
+    .leftJoin(components, eq(prompts.componentId, components.id));
 
     if (params?.categoryId) {
       query.where(eq(prompts.categoryId, params.categoryId));
@@ -79,22 +92,44 @@ export class DatabaseStorage implements IStorage {
     }
 
     const results = await query;
-    
-    // Transform result to match PromptResponse type (handling the join)
+
     return results.map(row => ({
       ...row,
-      // Ensure category is present (it should be due to not null constraint, but left join type implies null)
-      category: row.category || undefined
+      category: row.category || undefined,
+      component: row.component || undefined
     }));
   }
 
-  async getPrompt(id: number): Promise<Prompt | undefined> {
-    const [prompt] = await db.select().from(prompts).where(eq(prompts.id, id));
-    return prompt;
+  async getPrompt(id: number): Promise<PromptResponse | undefined> {
+    const result = await db.select({
+      id: prompts.id,
+      categoryId: prompts.categoryId,
+      componentId: prompts.componentId,
+      title: prompts.title,
+      description: prompts.description,
+      content: prompts.content,
+      isFavorite: prompts.isFavorite,
+      metadata: prompts.metadata,
+      category: categories,
+      component: components
+    })
+    .from(prompts)
+    .leftJoin(categories, eq(prompts.categoryId, categories.id))
+    .leftJoin(components, eq(prompts.componentId, components.id))
+    .where(eq(prompts.id, id))
+    .limit(1);
+    if (result.length === 0) return undefined;
+    const row = result[0];
+    return {
+      ...row,
+      category: row.category || undefined,
+      component: row.component || undefined
+    };
   }
 
   async createPrompt(prompt: InsertPrompt): Promise<Prompt> {
-    const [newPrompt] = await db.insert(prompts).values(prompt).returning();
+    const values = { ...prompt, componentId: prompt.componentId || undefined };
+    const [newPrompt] = await db.insert(prompts).values(values).returning();
     return newPrompt;
   }
 }

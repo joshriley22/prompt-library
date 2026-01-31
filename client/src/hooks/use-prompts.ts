@@ -114,6 +114,22 @@ export function useCopyPrompt() {
 }
 
 // ============================================
+// COMPONENTS HOOKS
+// ============================================
+
+export function useComponents() {
+  return useQuery({
+    queryKey: [api.components.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.components.list.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch components");
+      const data = await res.json();
+      return api.components.list.responses[200].parse(data);
+    },
+  });
+}
+
+// ============================================
 // CATEGORIES HOOKS
 // ============================================
 
