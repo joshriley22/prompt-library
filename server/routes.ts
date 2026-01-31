@@ -124,6 +124,29 @@ async function seedDatabase() {
           title: "Product Description",
           description: "Write compelling product descriptions",
           content: "Write a product description for [product name]. Key features: [list features]. Target customer: [describe]. Benefits: [list benefits]. Make it persuasive, highlight what makes it unique, and optimize for both customers and SEO."
+        },
+        {
+          title: "Marketing Campaign Ideas",
+          description: "Brainstorm marketing campaign concepts",
+          content: "Generate 5 marketing campaign ideas for [product/service/event]. Target audience: [describe]. Budget: [amount/range]. Goals: [awareness/sales/engagement]. Include campaign themes, channels, and expected outcomes."
+        }
+      ]
+    },
+    operations: {
+      title: "Business Operations",
+      icon: "Settings",
+      color: "bg-gray-500",
+      description: "Daily management and operations prompts",
+      prompts: [
+        {
+          title: "Standard Operating Procedure (SOP)",
+          description: "Create clear procedures for team tasks",
+          content: "Write a detailed Standard Operating Procedure for [task name]. Include: purpose, equipment needed, step-by-step instructions, safety precautions, and troubleshooting tips."
+        },
+        {
+          title: "Inventory Management Strategy",
+          description: "Optimize stock levels and ordering",
+          content: "Develop an inventory management plan for [business type]. Focus on reducing waste, optimizing reorder points for [key products], and managing lead times from [suppliers]."
         }
       ]
     },
